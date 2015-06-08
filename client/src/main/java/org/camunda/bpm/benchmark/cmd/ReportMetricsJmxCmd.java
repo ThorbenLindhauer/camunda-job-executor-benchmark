@@ -12,37 +12,20 @@
  */
 package org.camunda.bpm.benchmark.cmd;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.camunda.bpm.benchmark.BenchmarkContext;
 
 /**
  * @author Thorben Lindhauer
  *
  */
-public class AddNodeCmd implements CliCommand {
+public class ReportMetricsJmxCmd implements CliCommand {
 
   public String getName() {
-    return "node";
+    return "report-metrics";
   }
 
   public void execute(String[] args, BenchmarkContext context) {
-    if (args.length < 2) {
-      System.out.println("Requires at least two arguments: host and port for jmx (+ any number of process engine names)");
-      return;
-    }
-
-    String host = args[0];
-    int port = Integer.parseInt(args[1]);
-
-    List<String> engines = new ArrayList<String>();
-    for (int i = 2; i < args.length; i++) {
-      engines.add(args[i]);
-    }
-
-    context.getClusterManager().addNode(host, port, engines);
+    context.getClusterManager().reportMetrics();
   }
-
 
 }

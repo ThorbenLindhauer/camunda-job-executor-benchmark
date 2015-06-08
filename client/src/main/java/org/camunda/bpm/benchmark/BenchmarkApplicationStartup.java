@@ -27,6 +27,7 @@ import org.camunda.bpm.benchmark.cmd.AddNodeCmd;
 import org.camunda.bpm.benchmark.cmd.CleanDbCmd;
 import org.camunda.bpm.benchmark.cmd.CliCommand;
 import org.camunda.bpm.benchmark.cmd.ExitCmd;
+import org.camunda.bpm.benchmark.cmd.ReportMetricsJmxCmd;
 import org.camunda.bpm.benchmark.cmd.StartJobExecutorCmd;
 import org.camunda.bpm.benchmark.cmd.StartProcessCmd;
 import org.camunda.bpm.benchmark.cmd.StopJobExecutorCmd;
@@ -98,6 +99,7 @@ public class BenchmarkApplicationStartup {
     commands.add(new StartProcessCmd());
     commands.add(new SwitchEngineCmd());
     commands.add(new CleanDbCmd());
+    commands.add(new ReportMetricsJmxCmd());
     commands.add(new ExitCmd());
 
     Map<String, CliCommand> result = new HashMap<String, CliCommand>();

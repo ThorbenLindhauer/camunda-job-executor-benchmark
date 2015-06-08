@@ -13,6 +13,7 @@
 package org.camunda.bpm.benchmark;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.management.MBeanServerConnection;
@@ -25,6 +26,7 @@ import javax.management.remote.JMXServiceURL;
 
 import org.camunda.bpm.container.impl.jmx.MBeanServiceContainer;
 import org.camunda.bpm.container.impl.jmx.services.JmxManagedJobExecutorMBean;
+import org.camunda.bpm.container.impl.jmx.services.JmxManagedProcessEngineMBean;
 import org.camunda.bpm.container.impl.spi.ServiceTypes;
 
 /**
@@ -35,8 +37,8 @@ public class ClusterManager {
 
   protected Set<ClusterNode> nodes = new HashSet<ClusterNode>();
 
-  public void addNode(String host, int port) {
-    this.nodes.add(new ClusterNode(host, port));
+  public void addNode(String host, int port, List<String> engines) {
+    this.nodes.add(new ClusterNode(host, port, engines));
   }
 
   public void startJobExecution() {
@@ -51,6 +53,12 @@ public class ClusterManager {
     }
   }
 
+  public void reportMetrics() {
+    for (ClusterNode node : nodes) {
+      node.reportMetrics();
+    }
+  }
+
   public Set<ClusterNode> getNodes() {
     return nodes;
   }
@@ -59,8 +67,10 @@ public class ClusterManager {
     protected JMXServiceURL jmxUrl;
     protected JMXConnector jmxConnector;
     protected MBeanServerConnection mBeanServerConnection;
+    protected List<String> processEngines;
 
-    public ClusterNode(String host, int port) {
+    public ClusterNode(String host, int port, List<String> processEngines) {
+      this.processEngines = processEngines;
       try {
         this.jmxUrl = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi");
         openJMXConnection();
@@ -107,6 +117,16 @@ public class ClusterManager {
 
       jobExecutorMBean.shutdown();
 
+    }
+
+    public void reportMetrics() {
+      for (String processEngine : processEngines) {
+        ObjectName processEngineName = getProcessEngineMBeanName(processEngine);
+        JmxManagedProcessEngineMBean engineMBean = MBeanServerInvocationHandler
+            .newProxyInstance(mBeanServerConnection, processEngineName, JmxManagedProcessEngineMBean.class, true);
+
+        engineMBean.reportDbMetrics();
+      }
     }
 
     public void openJMXConnection() {
