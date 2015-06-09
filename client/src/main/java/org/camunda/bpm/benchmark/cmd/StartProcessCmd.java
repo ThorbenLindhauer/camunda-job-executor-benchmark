@@ -12,6 +12,9 @@
  */
 package org.camunda.bpm.benchmark.cmd;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.camunda.bpm.benchmark.BenchmarkContext;
 import org.camunda.bpm.engine.RuntimeService;
 
@@ -27,17 +30,28 @@ public class StartProcessCmd implements CliCommand {
 
   public void execute(String[] args, BenchmarkContext context) {
 
-    if (args.length != 2) {
-      System.out.println("Requires  two arguments: process definition key and number of instances");
+    if (args.length < 2) {
+      System.out.println("Requires at least two arguments: process definition key and number of instances + optionally variable key value pairs (all are treated as integers)");
       return;
     }
 
     String processDefinitionKey = args[0];
     int numberOfInstances = Integer.parseInt(args[1]);
 
+    Map<String, Object> variables = new HashMap<String, Object>();
+    for (int i = 2; i < args.length; i++) {
+      String[] variablePair = args[i].split("=");
+      if (variablePair.length != 2) {
+        System.out.println("ignoring variable argument " + args[i]);
+        continue;
+      }
+
+      variables.put(variablePair[0], Integer.parseInt(variablePair[1]));
+    }
+
     for (int i = 0; i < numberOfInstances; i++) {
       RuntimeService runtimeService = context.getProcessEngine().getRuntimeService();
-      runtimeService.startProcessInstanceByKey(processDefinitionKey);
+      runtimeService.startProcessInstanceByKey(processDefinitionKey, variables);
     }
   }
 }
