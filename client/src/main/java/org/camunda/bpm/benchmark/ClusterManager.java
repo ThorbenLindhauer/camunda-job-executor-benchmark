@@ -28,6 +28,7 @@ import org.camunda.bpm.container.impl.jmx.MBeanServiceContainer;
 import org.camunda.bpm.container.impl.jmx.services.JmxManagedJobExecutorMBean;
 import org.camunda.bpm.container.impl.jmx.services.JmxManagedProcessEngineMBean;
 import org.camunda.bpm.container.impl.spi.ServiceTypes;
+import org.camunda.bpm.engine.impl.metrics.SimpleIpBasedProvider;
 
 /**
  * @author Thorben Lindhauer
@@ -53,6 +54,15 @@ public class ClusterManager {
     }
   }
 
+  public Set<String> getMetricReporterIds() {
+    Set<String> reporterIds = new HashSet<String>();
+    for (ClusterNode node : nodes) {
+      reporterIds.addAll(node.getMetricReporterIds());
+    }
+
+    return reporterIds;
+  }
+
   public void reportMetrics() {
     for (ClusterNode node : nodes) {
       node.reportMetrics();
@@ -64,12 +74,15 @@ public class ClusterManager {
   }
 
   public static class ClusterNode {
+    protected String ip;
     protected JMXServiceURL jmxUrl;
     protected JMXConnector jmxConnector;
     protected MBeanServerConnection mBeanServerConnection;
     protected List<String> processEngines;
 
     public ClusterNode(String host, int port, List<String> processEngines) {
+      // TODO: relies on that host is an IP
+      this.ip = host;
       this.processEngines = processEngines;
       try {
         this.jmxUrl = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/jmxrmi");
@@ -77,6 +90,16 @@ public class ClusterManager {
       } catch (Exception e) {
         throw new RuntimeException("Could not setup JMX Connection", e);
       }
+    }
+
+    public Set<String> getMetricReporterIds() {
+      Set<String> metricReporterIds = new HashSet<String>();
+
+      for (String engineName : processEngines) {
+        metricReporterIds.add(SimpleIpBasedProvider.createId(ip, engineName));
+      }
+
+      return metricReporterIds;
     }
 
     protected ObjectName getJobAcquisitionMBeanName(String jobAcquisitionName) {

@@ -8,9 +8,6 @@
 
   <properties>
     <camunda.version>7.4.0-SNAPSHOT</camunda.version>
-    <resteasy.version>2.3.5.Final</resteasy.version>
-    <jackson.version>2.5.1</jackson.version>
-    <jetty.version>9.3.0.M2</jetty.version>
   </properties>
 
   <dependencyManagement>
@@ -35,39 +32,16 @@
       <groupId>com.fasterxml.uuid</groupId>
       <artifactId>java-uuid-generator</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>process-sources</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${targetdirectory}</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.6</version>
-        <configuration>
-          <archive>
-            <manifest>
-<!--               <addClasspath>true</addClasspath> -->
-              <mainClass>org.camunda.bpm.benchmark.BenchmarkApplicationStartup</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
-      
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>appassembler-maven-plugin</artifactId>
