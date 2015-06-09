@@ -31,6 +31,7 @@ import org.camunda.bpm.benchmark.cmd.GenerateReportCmd;
 import org.camunda.bpm.benchmark.cmd.ReportMetricsJmxCmd;
 import org.camunda.bpm.benchmark.cmd.StartJobExecutorCmd;
 import org.camunda.bpm.benchmark.cmd.StartProcessCmd;
+import org.camunda.bpm.benchmark.cmd.StartProcessIntervalCmd;
 import org.camunda.bpm.benchmark.cmd.StopJobExecutorCmd;
 import org.camunda.bpm.benchmark.cmd.SwitchEngineCmd;
 import org.camunda.bpm.engine.ProcessEngine;
@@ -98,6 +99,7 @@ public class BenchmarkApplicationStartup {
     commands.add(new StartJobExecutorCmd());
     commands.add(new StopJobExecutorCmd());
     commands.add(new StartProcessCmd());
+    commands.add(new StartProcessIntervalCmd());
     commands.add(new SwitchEngineCmd());
     commands.add(new CleanDbCmd());
     commands.add(new ReportMetricsJmxCmd());

@@ -49,8 +49,8 @@ public class StartProcessCmd implements CliCommand {
       variables.put(variablePair[0], Integer.parseInt(variablePair[1]));
     }
 
+    RuntimeService runtimeService = context.getProcessEngine().getRuntimeService();
     for (int i = 0; i < numberOfInstances; i++) {
-      RuntimeService runtimeService = context.getProcessEngine().getRuntimeService();
       runtimeService.startProcessInstanceByKey(processDefinitionKey, variables);
     }
   }
