@@ -16,6 +16,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.camunda.bpm.benchmark.BenchmarkContext;
@@ -37,9 +38,12 @@ public class GenerateReportCmd implements CliCommand {
   }
 
   public void execute(String[] args, BenchmarkContext context) {
-    if (args.length != 3) {
-      System.out.println("Requires three arguments: start data and end date for metrics reporting; an interval in seconds "
-          + "that is used to report metrics for (i.e. an interval of 5 seconds means metrics are queried for 5 second intervals); "
+    if (args.length < 4) {
+      System.out.println("Requires at least four arguments: \n"
+          + "1) start date \n"
+          + "2) end date for metrics reporting; \n"
+          + "3) an interval in seconds that is used to report metrics for (i.e. an interval of 5 seconds means metrics are queried for 5 second intervals); \n"
+          + "4) a variable number of reporter identifiers for which metrics should be collected"
           + "dates have to be specified in the format " + DATE_FORMAT_STRING);
       return;
     }
@@ -57,8 +61,10 @@ public class GenerateReportCmd implements CliCommand {
     }
 
     int metricsReportInterval = Integer.parseInt(args[2]);
-
-    Set<String> metricsReporterIds = context.getClusterManager().getMetricReporterIds();
+    Set<String> metricsReporterIds = new HashSet<String>();
+    for (int i = 3; i < args.length; i++) {
+      metricsReporterIds.add(args[i]);
+    }
 
     MetricsReport report = new MetricsReport(context.getProcessEngine(), startDate, endDate,
         metricsReportInterval, metricsReporterIds);

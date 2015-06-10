@@ -28,7 +28,6 @@ import org.camunda.bpm.container.impl.jmx.MBeanServiceContainer;
 import org.camunda.bpm.container.impl.jmx.services.JmxManagedJobExecutorMBean;
 import org.camunda.bpm.container.impl.jmx.services.JmxManagedProcessEngineMBean;
 import org.camunda.bpm.container.impl.spi.ServiceTypes;
-import org.camunda.bpm.engine.impl.metrics.SimpleIpBasedProvider;
 
 /**
  * @author Thorben Lindhauer
@@ -52,15 +51,6 @@ public class ClusterManager {
     for (ClusterNode node : nodes) {
       node.shutdownJobExecutor(null);
     }
-  }
-
-  public Set<String> getMetricReporterIds() {
-    Set<String> reporterIds = new HashSet<String>();
-    for (ClusterNode node : nodes) {
-      reporterIds.addAll(node.getMetricReporterIds());
-    }
-
-    return reporterIds;
   }
 
   public void reportMetrics() {
@@ -90,16 +80,6 @@ public class ClusterManager {
       } catch (Exception e) {
         throw new RuntimeException("Could not setup JMX Connection", e);
       }
-    }
-
-    public Set<String> getMetricReporterIds() {
-      Set<String> metricReporterIds = new HashSet<String>();
-
-      for (String engineName : processEngines) {
-        metricReporterIds.add(SimpleIpBasedProvider.createId(ip, engineName));
-      }
-
-      return metricReporterIds;
     }
 
     protected ObjectName getJobAcquisitionMBeanName(String jobAcquisitionName) {
