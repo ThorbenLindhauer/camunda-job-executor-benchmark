@@ -39,11 +39,12 @@ public class GenerateReportCmd implements CliCommand {
 
   public void execute(String[] args, BenchmarkContext context) {
     if (args.length < 4) {
-      System.out.println("Requires at least four arguments: \n"
-          + "1) start date \n"
+      System.out.println("Requires at least five arguments: \n"
+          + "1) the time the benchmark was started (as exact as possible) \n"
           + "2) end date for metrics reporting; \n"
           + "3) an interval in seconds that is used to report metrics for (i.e. an interval of 5 seconds means metrics are queried for 5 second intervals); \n"
-          + "4) a variable number of reporter identifiers for which metrics should be collected"
+          + "4) the time the benchmark was started \n"
+          + "5) a variable number of reporter identifiers for which metrics should be collected\n"
           + "dates have to be specified in the format " + DATE_FORMAT_STRING);
       return;
     }

@@ -12,6 +12,10 @@
  */
 package org.camunda.bpm.benchmark.cmd;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.camunda.bpm.benchmark.BenchmarkContext;
 
 /**
@@ -20,11 +24,15 @@ import org.camunda.bpm.benchmark.BenchmarkContext;
  */
 public class StartJobExecutorCmd implements CliCommand {
 
+  public static final String DATE_FORMAT_STRING = "HH:mm:ss";
+  public static final DateFormat DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
+
   public String getName() {
     return "start-job-execution";
   }
 
   public void execute(String[] args, BenchmarkContext context) {
+    System.out.println("Starting job execution at: " + DATE_FORMAT.format(new Date()));
     context.getClusterManager().startJobExecution();
   }
 

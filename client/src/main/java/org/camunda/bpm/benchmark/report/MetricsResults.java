@@ -57,10 +57,10 @@ public class MetricsResults {
     protected Date endDate;
     protected String metricName;
     protected String operator;
-    protected long value;
+    protected Number value;
 
     public MetricsResultInstance(Date startDate, Date endDate, String metricName,
-        String operator, long value) {
+        String operator, Number value) {
       this.startDate = startDate;
       this.endDate = endDate;
       this.metricName = metricName;
@@ -80,10 +80,10 @@ public class MetricsResults {
     public void setOperator(String operator) {
       this.operator = operator;
     }
-    public long getValue() {
+    public Number getValue() {
       return value;
     }
-    public void setValue(long value) {
+    public void setValue(Number value) {
       this.value = value;
     }
     public Date getStartDate() {

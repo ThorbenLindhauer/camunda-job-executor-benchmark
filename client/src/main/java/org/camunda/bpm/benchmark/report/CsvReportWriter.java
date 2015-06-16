@@ -43,18 +43,30 @@ public class CsvReportWriter implements MetricsWriter {
     List<String> lines = new ArrayList<String>();
 
     // header
-    addLine(lines, "reporter", "metric", "operator", "intervalStart", "intervalEnd", "value");
+    addLine(lines, "reporter", "metric", "reporter_metric", "operator", "intervalStart", "intervalEnd", "value");
 
     for (Map.Entry<String, List<MetricsResultInstance>> resultsByReporter : result.getMetricsByReporter().entrySet()) {
       for (MetricsResultInstance resultInstance : resultsByReporter.getValue()) {
         addLine(lines,
             resultsByReporter.getKey(),
             resultInstance.getMetricName(),
+            resultsByReporter.getKey() + "_" + resultInstance.getMetricName(),
             resultInstance.getOperator(),
             formatDate(resultInstance.getStartDate()),
             formatDate(resultInstance.getEndDate()),
             resultInstance.getValue());
       }
+    }
+
+    for (MetricsResultInstance resultInstance : result.getAggregatedResults()) {
+      addLine(lines,
+          "aggregated",
+          resultInstance.getMetricName(),
+          "aggregated_" + resultInstance.getMetricName(),
+          resultInstance.getOperator(),
+          formatDate(resultInstance.getStartDate()),
+          formatDate(resultInstance.getEndDate()),
+          resultInstance.getValue());
     }
 
     System.out.println("Writing to " + file.getAbsolutePath());

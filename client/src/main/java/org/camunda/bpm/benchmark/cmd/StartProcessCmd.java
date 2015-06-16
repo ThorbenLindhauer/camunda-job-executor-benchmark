@@ -17,6 +17,11 @@ import java.util.Map;
 
 import org.camunda.bpm.benchmark.BenchmarkContext;
 import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
+import org.camunda.bpm.engine.impl.cmd.StartProcessInstanceCmd;
+import org.camunda.bpm.engine.impl.interceptor.Command;
+import org.camunda.bpm.engine.impl.interceptor.CommandContext;
+import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
 
 /**
  * @author Thorben Lindhauer
@@ -35,10 +40,10 @@ public class StartProcessCmd implements CliCommand {
       return;
     }
 
-    String processDefinitionKey = args[0];
-    int numberOfInstances = Integer.parseInt(args[1]);
+    final String processDefinitionKey = args[0];
+    final int numberOfInstances = Integer.parseInt(args[1]);
 
-    Map<String, Object> variables = new HashMap<String, Object>();
+    final Map<String, Object> variables = new HashMap<String, Object>();
     for (int i = 2; i < args.length; i++) {
       String[] variablePair = args[i].split("=");
       if (variablePair.length != 2) {
@@ -49,9 +54,19 @@ public class StartProcessCmd implements CliCommand {
       variables.put(variablePair[0], Integer.parseInt(variablePair[1]));
     }
 
-    RuntimeService runtimeService = context.getProcessEngine().getRuntimeService();
-    for (int i = 0; i < numberOfInstances; i++) {
-      runtimeService.startProcessInstanceByKey(processDefinitionKey, variables);
-    }
+    ProcessEngineConfigurationImpl configuration = (ProcessEngineConfigurationImpl) context.getProcessEngine()
+        .getProcessEngineConfiguration();
+    CommandExecutor commandExecutor = configuration.getCommandExecutorTxRequired();
+
+    // execute in one transaction
+    commandExecutor.execute(new Command<Void>() {
+
+      public Void execute(CommandContext commandContext) {
+        for (int i = 0; i < numberOfInstances; i++) {
+          new StartProcessInstanceCmd(processDefinitionKey, null, null, null, variables).execute(commandContext);
+        }
+        return null;
+      }
+    });
   }
 }

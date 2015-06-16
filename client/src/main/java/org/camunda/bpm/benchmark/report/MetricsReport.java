@@ -13,12 +13,15 @@
 package org.camunda.bpm.benchmark.report;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import org.camunda.bpm.benchmark.report.MetricsResults.MetricsResultInstance;
 import org.camunda.bpm.engine.ProcessEngine;
+import org.camunda.bpm.engine.history.HistoricProcessInstance;
 import org.camunda.bpm.engine.management.Metrics;
 import org.camunda.bpm.engine.management.MetricsQuery;
+import org.joda.time.DateTime;
 
 /**
  * @author Thorben Lindhauer
@@ -36,7 +39,10 @@ public class MetricsReport {
   public static final String[] DEFAULT_REPORTED_METRICS = new String[]{
     Metrics.JOB_ACQUIRED_SUCCESS,
     Metrics.JOB_ACQUIRED_FAILURE,
-    Metrics.JOB_SUCCESSFUL
+    Metrics.JOB_SUCCESSFUL,
+    Metrics.JOB_FAILED,
+    Metrics.JOB_LOCKED_EXCLUSIVE,
+    Metrics.JOB_ACQUISITION_ATTEMPT
   };
 
   public MetricsReport(ProcessEngine engine, Date startDate, Date endDate, int resultResolutionInSeconds,
@@ -58,7 +64,7 @@ public class MetricsReport {
     for (String reporter : reporterIds) {
       metricsQuery.reporter(reporter);
 
-      Date intervalStartDate = startDate;
+      Date intervalStartDate = new DateTime(startDate).minus(resultResolutionInSeconds * 1000 * 3).toDate();
       while (intervalStartDate.getTime() < endDate.getTime()) {
         Date intervalEndDate = new Date(intervalStartDate.getTime()
             + (resultResolutionInSeconds * 1000));
@@ -77,7 +83,50 @@ public class MetricsReport {
       }
     }
 
+    addThroughputResults(engine, startDate, results);
+
     writer.write(results);
+  }
+
+  protected void addThroughputResults(ProcessEngine engine, Date benchmarkStartDate, MetricsResults results) {
+    List<HistoricProcessInstance> historicProcessInstances = engine.getHistoryService()
+        .createHistoricProcessInstanceQuery().list();
+
+    long maxEndTime = 0L;
+
+    double meanDuration = 0.0d;
+    for (HistoricProcessInstance instance : historicProcessInstances) {
+      meanDuration += (double) getActualDuration(instance, benchmarkStartDate) / (double) historicProcessInstances.size();
+
+      if (instance.getEndTime().getTime() > maxEndTime) {
+        maxEndTime = instance.getEndTime().getTime();
+      }
+    }
+
+    results.submitAggregatedResult(
+        new MetricsResultInstance(startDate, endDate, "process-instance-duration", "avg", meanDuration));
+
+    double avgMeanDeviation = 0.0d;
+    for (HistoricProcessInstance instance : historicProcessInstances) {
+      avgMeanDeviation += Math.pow((double) getActualDuration(instance, benchmarkStartDate) - (double) meanDuration, 2.0d)
+          / (double) historicProcessInstances.size();
+    }
+
+    double stdDevDuration = Math.sqrt(avgMeanDeviation);
+    results.submitAggregatedResult(
+        new MetricsResultInstance(startDate, endDate, "process-instance-duration", "stddev", stdDevDuration));
+
+    results.submitAggregatedResult(new MetricsResultInstance(startDate, endDate, "process-instance-duration",
+        "overall-duration", maxEndTime - benchmarkStartDate.getTime()));
+  }
+
+  public long getActualDuration(HistoricProcessInstance instance, Date benchmarkStartTime) {
+    if (instance.getStartTime().getTime() < benchmarkStartTime.getTime()) {
+      return instance.getEndTime().getTime() - benchmarkStartTime.getTime();
+    }
+    else {
+      return instance.getDurationInMillis();
+    }
   }
 
   protected String[] getReportedMetrics() {

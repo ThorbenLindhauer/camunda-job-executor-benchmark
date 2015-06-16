@@ -20,6 +20,11 @@ import java.util.TimerTask;
 import org.camunda.bpm.benchmark.BenchmarkContext;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
+import org.camunda.bpm.engine.impl.cmd.StartProcessInstanceCmd;
+import org.camunda.bpm.engine.impl.interceptor.Command;
+import org.camunda.bpm.engine.impl.interceptor.CommandContext;
+import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
 
 /**
  * @author Thorben Lindhauer
@@ -104,10 +109,20 @@ public class StartProcessIntervalCmd implements CliCommand {
 
       numInstancesProcessed += numInstancesPerInterval;
 
-      RuntimeService runtimeService = engine.getRuntimeService();
-      for (int i = 0; i < numInstancesPerInterval; i++) {
-        runtimeService.startProcessInstanceByKey(processDefinitionKey, variables);
-      }
+      ProcessEngineConfigurationImpl configuration = (ProcessEngineConfigurationImpl) engine
+          .getProcessEngineConfiguration();
+      CommandExecutor commandExecutor = configuration.getCommandExecutorTxRequired();
+
+      // execute in one transaction
+      commandExecutor.execute(new Command<Void>() {
+
+        public Void execute(CommandContext commandContext) {
+          for (int i = 0; i < numInstancesPerInterval; i++) {
+            new StartProcessInstanceCmd(processDefinitionKey, null, null, null, variables);
+          }
+          return null;
+        }
+      });
     }
 
   }

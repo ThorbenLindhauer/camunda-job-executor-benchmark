@@ -12,6 +12,8 @@
  */
 package org.camunda.bpm.benchmark;
 
+import java.util.Date;
+
 import org.camunda.bpm.engine.ProcessEngine;
 
 /**
@@ -22,6 +24,8 @@ public class BenchmarkContext {
 
   protected ClusterManager clusterManager;
   protected ProcessEngine processEngine;
+
+  protected Date currentScenarioStart;
 
   public ClusterManager getClusterManager() {
     return clusterManager;
@@ -37,5 +41,15 @@ public class BenchmarkContext {
 
   public void setProcessEngine(ProcessEngine processEngine) {
     this.processEngine = processEngine;
+  }
+
+  public void startBenchmarkScenario() {
+    // remember the start date; allows calculation of throughput since process instance
+    // start date cannot be used as process instances can be created upfront
+    this.currentScenarioStart = new Date();
+  }
+
+  public Date getCurrentScenarioStart() {
+    return currentScenarioStart;
   }
 }

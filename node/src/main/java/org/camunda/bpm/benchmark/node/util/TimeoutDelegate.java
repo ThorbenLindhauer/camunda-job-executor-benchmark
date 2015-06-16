@@ -23,9 +23,9 @@ import org.camunda.bpm.engine.delegate.JavaDelegate;
  */
 public class TimeoutDelegate implements JavaDelegate {
 
-  protected static final int SLEEP_MEAN = 2000;
+  protected static final int SLEEP_MEAN = 100;
   // 95% of sampled values are within three standard deviations
-  protected static final int SLEEP_STDDEV = 600;
+  protected static final int SLEEP_STDDEV = 30;
 
   public void execute(DelegateExecution execution) throws Exception {
     Random random = new Random();
