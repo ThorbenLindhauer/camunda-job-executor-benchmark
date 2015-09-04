@@ -14,9 +14,9 @@ package org.camunda.bpm.benchmark.cmd;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.camunda.bpm.benchmark.BenchmarkContext;
-import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.cmd.StartProcessInstanceCmd;
 import org.camunda.bpm.engine.impl.interceptor.Command;
@@ -43,7 +43,7 @@ public class StartProcessCmd implements CliCommand {
     final String processDefinitionKey = args[0];
     final int numberOfInstances = Integer.parseInt(args[1]);
 
-    final Map<String, Object> variables = new HashMap<String, Object>();
+    final Map<String, VariableProvider> variableProviders = new HashMap<String, VariableProvider>();
     for (int i = 2; i < args.length; i++) {
       String[] variablePair = args[i].split("=");
       if (variablePair.length != 2) {
@@ -51,7 +51,8 @@ public class StartProcessCmd implements CliCommand {
         continue;
       }
 
-      variables.put(variablePair[0], Integer.parseInt(variablePair[1]));
+      VariableProvider valueProvider = determineVariableProvider(variablePair[1]);
+      variableProviders.put(variablePair[0], valueProvider);
     }
 
     ProcessEngineConfigurationImpl configuration = (ProcessEngineConfigurationImpl) context.getProcessEngine()
@@ -63,10 +64,57 @@ public class StartProcessCmd implements CliCommand {
 
       public Void execute(CommandContext commandContext) {
         for (int i = 0; i < numberOfInstances; i++) {
+          Map<String, Object> variables = resolveVariables(variableProviders);
+
           new StartProcessInstanceCmd(processDefinitionKey, null, null, null, variables).execute(commandContext);
         }
         return null;
       }
     });
+  }
+
+  protected VariableProvider determineVariableProvider(String string) {
+    if ("$random".equals(string)) {
+      return new RandomVariableProvider();
+    }
+    else {
+      return new IntegerVariableProvider(string);
+    }
+  }
+
+  protected Map<String, Object> resolveVariables(Map<String, VariableProvider> providers) {
+    Map<String, Object> variables = new HashMap<String, Object>();
+
+    for (Map.Entry<String, VariableProvider> provider : providers.entrySet()) {
+      variables.put(provider.getKey(), provider.getValue().resolveVariable());
+    }
+
+    return variables;
+  }
+
+  public static interface VariableProvider {
+
+    Object resolveVariable();
+  }
+
+  public static class RandomVariableProvider implements VariableProvider {
+
+    protected Random random = new Random();
+
+    public Object resolveVariable() {
+      return random.nextInt(Integer.MAX_VALUE);
+    }
+  }
+
+  public static class IntegerVariableProvider  implements VariableProvider {
+    protected Integer value;
+
+    public IntegerVariableProvider(String value) {
+      this.value = Integer.parseInt(value);
+    }
+
+    public Object resolveVariable() {
+      return value;
+    }
   }
 }
